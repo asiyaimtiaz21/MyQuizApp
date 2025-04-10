@@ -8,45 +8,46 @@ import Summary from './src/components/Summary';
 const Stack = createStackNavigator();
 
 export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerTitleAlign: 'center' }}>
+return (
+<NavigationContainer>
+<Stack.Navigator screenOptions={{ headerTitleAlign: 'center' }}>
 
-        {/*this navigates the stacks so it can change between the different screens*/}
-        <Stack.Screen
-          name="Question"
-          component={Question}
-          initialParams={{ allData: questions, index: 0, chosenAnswers: [] }}
-        />
-        <Stack.Screen name="Summary" component={Summary} />
+{/*this navigates the stacks so it can change between the different screens*/}
+<Stack.Screen
+name="Question"
+component={Question}
+initialParams={{ allData: questions, index: 0, chosenAnswers: [] }}
+/>
+<Stack.Screen name="Summary" component={Summary} />
 
-        {/*this is the screen which shows the summary of the quiz after we finish answering all the questions*/}
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+{/*this is the screen which shows the summary of the quiz after we finish answering all the questions*/}
+</Stack.Navigator>
+</NavigationContainer>
+);
 }
 
 /*this defines each question for the quiz*/
 const questions = [
-  /*this shows each question, the type of question, the choices, and the correct answer index*/
-  {
-    prompt: 'What does 2+2 equal?',
-    type: 'multiple-choice',
-    choices: ['4', '5', '6', '7'],
-    correct: 0,
-  },
 
-  {
-    prompt: 'Which colors are in a rainbow?',
-    type: 'multiple-answer',
-    choices: ['green', 'grey', 'red', 'black'],
-    correct: [0, 2],
-  },
+/*this shows each question, the type of question, the choices, and the correct answer index*/
+{
+prompt: 'What does 2+2 equal?',
+type: 'multiple-choice',
+choices: ['4', '5', '6', '7'],
+correct: 0,
+},
 
-  {
-    prompt: 'True or False? Grass is Pink.',
-    type: 'true-false',
-    choices: ['True', 'False'],
-    correct: 1,
-  },
+{
+prompt: 'Which colors are in a rainbow?',
+type: 'multiple-answer',
+choices: ['green', 'grey', 'red', 'black'],
+correct: [0, 2],
+},
+
+{
+prompt: 'True or False? Grass is Pink.',
+type: 'true-false',
+choices: ['True', 'False'],
+correct: 1,
+},
 ];

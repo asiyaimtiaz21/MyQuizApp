@@ -1,0 +1,1710 @@
+╭─── Claude Code v2.1.119 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│                 Welcome back Asiya!                │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ Recent activity         │
+│                        ▘▘ ▝▝                       │ No recent activity      │
+│       Sonnet 4.6 · Claude Pro ·                    │                         │
+│       asiyaimtiaz03@gmail.com's Organization       │                         │
+│                    ~/MyQuizApp                     │                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+❯ Analyze the entire MyQuizApp codebase and describe the current UI structure.  
+  Focus only on: layout, styling approach, component structure, and visual      
+  weaknesses.                                                                   
+  Do NOT modify any code.                                                       
+  Output a clear breakdown of what should be improved to modernize the UI.      
+
+⏺ Explore(Analyze MyQuizApp UI structure)
+  ⎿  Done (16 tool uses · 26.0k tokens · 1m 8s)
+  (ctrl+o to expand)
+
+⏺ Here is a complete breakdown of the MyQuizApp UI structure and what needs
+  improvement:
+
+  ---
+  Current UI Structure
+
+  Component Architecture
+
+  Three files make up the entire UI:
+
+  ┌────────────────────────────┬─────────────────────────────────────────────┐
+  │            File            │                    Role                     │
+  ├────────────────────────────┼─────────────────────────────────────────────┤
+  │ App.js                     │ Entry point, navigation setup, quiz data    │
+  ├────────────────────────────┼─────────────────────────────────────────────┤
+  │ src/components/Question.js │ Single question display + answer            │
+  │                            │ interaction                                 │
+  ├────────────────────────────┼─────────────────────────────────────────────┤
+  │ src/components/Summary.js  │ Results screen after quiz completion        │
+  └────────────────────────────┴─────────────────────────────────────────────┘
+
+  The navigation is a simple 2-screen stack: Question → Summary. Each question
+  gets push()-ed onto the stack, so the back button works per-question by
+  calling goBack().
+
+  ---
+  Styling Approach — Inconsistent and Fragmented
+
+  - No central theme file, no design tokens, no color constants. Everything is
+  scattered.
+  - Summary.js uses StyleSheet.create() (lines 68–99) — the correct React Native
+   pattern.
+  - Question.js uses only inline styles — { flex: 1, padding: 20 }, { fontSize: 
+  18 }, etc.
+  - These two components were styled by different people or at different times,
+  with no shared foundation.
+
+  Component library fragmentation:
+  - ButtonGroup from react-native-elements — answer choices
+  - Button from native React Native — the Next/Finish action
+  - Icon from react-native-vector-icons — back arrow
+  - No wrapper layer, no theming provider, no unified visual contract
+
+  ---
+  Layout Patterns
+
+  - Layouts are entirely flex: 1 column stacks with raw pixel padding/margins
+  - Spacing values scattered: 3, 15, 20 px — no spacing scale
+  - No responsive sizing (Dimensions, Platform.select, %-based values not used)
+  - ScrollView in Summary handles overflow, but Question screen has no scroll —
+  long questions or many choices could overflow
+
+  ---
+  Color Palette
+
+  ┌────────────────────────┬─────────────────────────────────────────────┐
+  │         Color          │                    Usage                    │
+  ├────────────────────────┼─────────────────────────────────────────────┤
+  │ System default (black) │ All body text                               │
+  ├────────────────────────┼─────────────────────────────────────────────┤
+  │ 'green'                │ Correct answer feedback in Summary          │
+  ├────────────────────────┼─────────────────────────────────────────────┤
+  │ 'red'                  │ Incorrect answer feedback in Summary        │
+  ├────────────────────────┼─────────────────────────────────────────────┤
+  │ '#FFFFFF'              │ Splash screen background (Android XML only) │
+  └────────────────────────┴─────────────────────────────────────────────┘
+
+  No primary brand color, no accent, no surface/background system. Named colors
+  like 'green' and 'red' are not standardized — they render differently across
+  devices and don't match any defined palette.
+
+  ---
+  Typography
+
+  ┌──────┬─────────────────────────────────────────────────────────┐
+  │ Size │                          Usage                          │
+  ├──────┼─────────────────────────────────────────────────────────┤
+  │ 18px │ Question prompt (Question.js), choice text (Summary.js) │
+  ├──────┼─────────────────────────────────────────────────────────┤
+  │ 20px │ Question text in Summary review list                    │
+  ├──────┼─────────────────────────────────────────────────────────┤
+  │ 24px │ Total score heading                                     │
+  └──────┴─────────────────────────────────────────────────────────┘
+
+  - No custom fonts — system defaults only
+  - No defined type scale or heading/body hierarchy
+  - fontWeight: 'bold' used in two places (correct answers, total score) but no
+  weight system
+  - textDecorationLine: 'line-through' used for struck-through wrong answers —
+  visually heavy but not designed
+
+  ---
+  Visual Weaknesses
+
+  1. No design system at all
+  Zero shared constants, no colors.js, no theme.js, no spacing scale. Every
+  value is a magic number defined inline.
+
+  2. Styling methodology mismatch
+  Question.js (inline) vs Summary.js (StyleSheet) — a new contributor has no
+  obvious pattern to follow.
+
+  3. Native Button is unstyled
+  The "Next Question" / "Finish Quiz" button uses React Native's bare <Button> —
+   which renders as a blue text label on iOS and a flat OS-native button on
+  Android. It cannot be styled for color, padding, shape, or border radius.
+
+  4. No visual feedback on answer selection
+  Answer choices use ButtonGroup but there is no visible "selected" state
+  customization — the default react-native-elements styling is unchanged and
+  visually dated.
+
+  5. Score display is plain text
+  The Summary screen shows "You got X out of Y correct" as unstyled body text
+  alongside a raw list of questions and answers with no visual hierarchy.
+
+  6. No empty/loading/error states
+  The app assumes data is always present and valid — no skeleton, no loading
+  indicator, no fallback.
+
+  7. Hard-coded layout values throughout
+  Over 20 instances of magic pixel numbers. Changing the spacing of the app
+  requires editing multiple unrelated files.
+
+  8. Navigation header is bare
+  Only headerTitleAlign: 'center' is set. No title text shown on the Question
+  screen, no background color, no custom font — it inherits OS defaults.
+
+  ---
+  Modernization Priorities
+
+  High impact / foundational:
+  1. Create a src/theme.js with color constants, a spacing scale, and font size
+  tokens
+  2. Replace the native Button with a custom styled TouchableOpacity or
+  Pressable with proper border radius, background color, and touch feedback
+  3. Migrate all inline styles in Question.js to StyleSheet.create()
+
+  Visual polish:
+  4. Replace 'green'/'red' with proper hex values from the theme
+  5. Add a custom font (e.g., Inter via Expo Google Fonts)
+  6. Style the navigation header (background, title, font)
+
+  UX improvements:
+  7. Add a visible selected-state style to answer choices (border highlight,
+  background tint)
+  8. Redesign the Summary screen — score as a large hero number, per-question
+  results as cards with clear correct/incorrect iconography
+  9. Add a "Restart Quiz" button on Summary
+
+  Architecture:
+  10. Consolidate component library — either go all-in on react-native-elements
+  (and theme it) or replace it with react-native-paper or a custom component set
+   — the current mix is a maintenance liability
+
+✻ Cogitated for 1m 19s
+
+❯ Improve the global UI styling of the quiz app.                                
+  Add a modern design system including:                                         
+                                                                                
+  consistent font styling                                                       
+  improved spacing and layout rhythm                                            
+  updated background and container styling                                      
+  modern button base styles                                                     
+  Do NOT change quiz logic or component behavior.                               
+  Keep all functionality intact.                                                
+
+⏺ Let me read all relevant files before touching anything.
+
+  Read 5 files (ctrl+o to expand)
+
+⏺ Good. Now I have a complete picture. Here's the plan before writing a line:
+
+  1. src/theme.js — new file: color palette, spacing scale, type scale, border
+  radii
+  2. App.js — style the header with the theme; add screen titles
+  3. Question.js — StyleSheet instead of inline styles, replace <Button> with a
+  styled TouchableOpacity, style ButtonGroup via its props
+  4. Summary.js — hero score card, question review cards, theme-backed answer
+  states
+
+  No logic, no behavior, no testID values touched.
+
+⏺ Write(src/theme.js)
+  ⎿  Wrote 44 lines to src/theme.js
+       1 export const colors = {
+       2   primary: '#4F46E5',
+       3   primaryDark: '#4338CA',
+       4   background: '#F8FAFC',
+       5   surface: '#FFFFFF',
+       6   textPrimary: '#0F172A',
+       7   textSecondary: '#64748B',
+       8   border: '#E2E8F0',
+       9   correct: '#16A34A',
+      10   incorrect: '#DC2626',
+     … +34 lines (ctrl+o to expand)
+
+⏺ Update(App.js)
+  ⎿  Added 18 lines, removed 2 lines
+      3  import { createStackNavigator } from '@react-navigation/stack';
+      4  import Question from './src/components/Question';
+      5  import Summary from './src/components/Summary';
+      6 +import { colors, typography } from './src/theme';               
+      7  
+      8  /*this creates a stack nav which handles the nav between each of
+          the screens*/
+      9  const Stack = createStackNavigator();
+     ...
+      11  export default function App() {
+      12  return (
+      13  <NavigationContainer>
+      13 -<Stack.Navigator screenOptions={{ headerTitleAlign: 'center' }}
+         ->                                                              
+      14 +<Stack.Navigator                                               
+      15 +  screenOptions={{                                             
+      16 +    headerTitleAlign: 'center',                                
+      17 +    headerStyle: { backgroundColor: colors.primary },          
+      18 +    headerTintColor: colors.white,                             
+      19 +    headerTitleStyle: {                                        
+      20 +      fontSize: typography.lg,                                 
+      21 +      fontWeight: typography.weights.semibold,                 
+      22 +    },                                                         
+      23 +  }}                                                           
+      24 +>                                                              
+      25  
+      26  {/*this navigates the stacks so it can change between the diffe
+          rent screens*/}
+      27  <Stack.Screen
+      28  name="Question"
+      29  component={Question}
+      30  initialParams={{ allData: questions, index: 0, chosenAnswers: [
+          ] }}
+      31 +options={{ title: 'Quiz' }}                                    
+      32  />
+      21 -<Stack.Screen name="Summary" component={Summary} />            
+      33 +<Stack.Screen                                                  
+      34 +  name="Summary"                                               
+      35 +  component={Summary}                                          
+      36 +  options={{ title: 'Results' }}                               
+      37 +/>                                                             
+      38  
+      39  {/*this is the screen which shows the summary of the quiz after
+           we finish answering all the questions*/}
+      40  </Stack.Navigator>
+
+⏺ Now rewrite Question.js — keep every logic line, only change the render and
+  styles:
+
+⏺ Write(src/components/Question.js)
+  ⎿  Added 119 lines, removed 28 lines
+      1  import React, { useState, useEffect } from 'react';
+      2 -import { View, Text, Button, Platform } from 'react-native';    
+      2 +import { View, Text, TouchableOpacity, StyleSheet } from 'react-
+        +native';                                                        
+      3  import { ButtonGroup } from 'react-native-elements';
+      4  import { useNavigation } from '@react-navigation/native';
+      5  import Icon from 'react-native-vector-icons/Ionicons';
+      6 +import { colors, spacing, typography, radii } from '../theme';  
+      7  
+      8  export default function Question({ navigation, route }) {
+      9  /*this gets the allData, index, and answers from the user from t
+         he route param*/
+     ...
+      17  question.type === 'multiple-answer' ? [] : null
+      18  );
+      19  
+      19 -/*this resets the index that has been selected when the index o
+         -f the question is changed*/                                    
+      20 +/*this resets the index that has been selected when the index o
+         +f the question is changed*/                                    
+      21  useEffect(() => {
+      22  setSelectedIndex(question.type === 'multiple-answer' ? [] : nul
+          l);
+      23  }, [index]);
+     ...
+      30  <Icon
+      31      name="arrow-back"
+      32      size={25}
+      32 -    color="black"                                              
+      33 +    color={colors.white}                                       
+      34      onPress={() => navigation.goBack()} /*this makes it go back
+           to the last screen*/
+      34 -    style={{ paddingLeft: 10 }}                                
+      35 +    style={{ paddingLeft: spacing.sm + 2 }}                    
+      36  />
+      37  )
+      38  ),
+      39  });
+      39 -},                                                             
+      40 +},                                                             
+      41  [navigation, index]);
+      42  
+      43  /*this helps update the answers inputed and goes to the next qu
+          estion or summary page*/
+     ...
+       70  }
+       71  };
+       72  
+       72 -  return (                                                    
+       73 -<View style={{ flex: 1, padding: 20 }}>                       
+       74 -<Text style={{ marginBottom: 20, fontSize: 18 }}>{question.pro
+          -mpt}</Text>                                                   
+       75 -<ButtonGroup                                                  
+       76 -    buttons={question.choices}                                
+       77 -    onPress={pressAnswer}                                     
+       78 -    selectedIndexes={question.type === 'multiple-answer' ? sel
+          -ectedIndex : undefined}                                       
+       79 -    selectedIndex={question.type !== 'multiple-answer' ? selec
+          -tedIndex : undefined}                                         
+       80 -    vertical                                                  
+       81 -    testID="choices"                                          
+       82 -    containerStyle={{ flex: 1 }}  /* Add flex to ensure proper
+          - rendering */                                                 
+       83 -/>                                                            
+       84 -<View style={{ marginTop: 20 }}>                              
+       85 -<Button                                                       
+       86 -title={index + 1 === allData.length ? 'Finish Quiz' : 'Next Qu
+          -estion'}                                                      
+       87 -onPress={goToTheNextQuestion}                                 
+       88 -testID="next-question"                                        
+       89 -disabled={                                                    
+       73 +  const isDisabled =                                          
+       74      selectedIndex === null ||
+       91 -    (question.type === 'multiple-answer' && selectedIndex.leng
+          -th === 0)                                                     
+       92 -}                                                             
+       93 -/>                                                            
+       75 +    (question.type === 'multiple-answer' && selectedIndex.leng
+          +th === 0);                                                    
+       76 +                                                              
+       77 +  return (                                                    
+       78 +    <View style={styles.container}>                           
+       79 +      <View style={styles.questionCard}>                      
+       80 +        <Text style={styles.questionCounter}>                 
+       81 +          Question {index + 1} of {allData.length}            
+       82 +        </Text>                                               
+       83 +        <Text style={styles.questionText}>{question.prompt}</T
+          +ext>                                                          
+       84 +      </View>                                                 
+       85 +      <ButtonGroup                                            
+       86 +        buttons={question.choices}                            
+       87 +        onPress={pressAnswer}                                 
+       88 +        selectedIndexes={question.type === 'multiple-answer' ?
+          + selectedIndex : undefined}                                   
+       89 +        selectedIndex={question.type !== 'multiple-answer' ? s
+          +electedIndex : undefined}                                     
+       90 +        vertical                                              
+       91 +        testID="choices"                                      
+       92 +        containerStyle={styles.buttonGroupContainer}          
+       93 +        buttonStyle={styles.buttonGroupButton}                
+       94 +        textStyle={styles.buttonGroupText}                    
+       95 +        selectedButtonStyle={styles.buttonGroupSelected}      
+       96 +        selectedTextStyle={styles.buttonGroupSelectedText}    
+       97 +        innerBorderStyle={{ color: colors.border }}           
+       98 +      />                                                      
+       99 +      <TouchableOpacity                                       
+      100 +        style={[styles.actionButton, isDisabled && styles.acti
+          +onButtonDisabled]}                                            
+      101 +        onPress={goToTheNextQuestion}                         
+      102 +        testID="next-question"                                
+      103 +        disabled={isDisabled}                                 
+      104 +      >                                                       
+      105 +        <Text style={[styles.actionButtonText, isDisabled && s
+          +tyles.actionButtonTextDisabled]}>                             
+      106 +          {index + 1 === allData.length ? 'Finish Quiz' : 'Nex
+          +t Question'}                                                  
+      107 +        </Text>                                               
+      108 +      </TouchableOpacity>                                     
+      109      </View>
+       95 -    </View>                                                   
+       96 -);                                                            
+      110 +  );                                                          
+      111  }
+      112 +                                                              
+      113 +const styles = StyleSheet.create({                            
+      114 +  container: {                                                
+      115 +    flex: 1,                                                  
+      116 +    backgroundColor: colors.background,                       
+      117 +    padding: spacing.md,                                      
+      118 +  },                                                          
+      119 +  questionCard: {                                             
+      120 +    backgroundColor: colors.surface,                          
+      121 +    borderRadius: radii.md,                                   
+      122 +    padding: spacing.md,                                      
+      123 +    marginBottom: spacing.md,                                 
+      124 +    shadowColor: '#000',                                      
+      125 +    shadowOffset: { width: 0, height: 1 },                    
+      126 +    shadowOpacity: 0.06,                                      
+      127 +    shadowRadius: 4,                                          
+      128 +    elevation: 2,                                             
+      129 +  },                                                          
+      130 +  questionCounter: {                                          
+      131 +    fontSize: typography.sm,                                  
+      132 +    color: colors.textSecondary,                              
+      133 +    fontWeight: typography.weights.medium,                    
+      134 +    marginBottom: spacing.xs,                                 
+      135 +    textTransform: 'uppercase',                               
+      136 +    letterSpacing: 0.5,                                       
+      137 +  },                                                          
+      138 +  questionText: {                                             
+      139 +    fontSize: typography.lg,                                  
+      140 +    color: colors.textPrimary,                                
+      141 +    fontWeight: typography.weights.semibold,                  
+      142 +    lineHeight: 26,                                           
+      143 +  },                                                          
+      144 +  buttonGroupContainer: {                                     
+      145 +    flex: 1,                                                  
+      146 +    borderRadius: radii.md,                                   
+      147 +    borderColor: colors.border,                               
+      148 +    marginBottom: spacing.md,                                 
+      149 +    marginLeft: 0,                                            
+      150 +    marginRight: 0,                                           
+      151 +    overflow: 'hidden',                                       
+      152 +  },                                                          
+      153 +  buttonGroupButton: {                                        
+      154 +    backgroundColor: colors.surface,                          
+      155 +    paddingVertical: spacing.sm,                              
+      156 +  },                                                          
+      157 +  buttonGroupText: {                                          
+      158 +    fontSize: typography.md,                                  
+      159 +    color: colors.textPrimary,                                
+      160 +    fontWeight: typography.weights.regular,                   
+      161 +  },                                                          
+      162 +  buttonGroupSelected: {                                      
+      163 +    backgroundColor: colors.primary,                          
+      164 +  },                                                          
+      165 +  buttonGroupSelectedText: {                                  
+      166 +    color: colors.white,                                      
+      167 +    fontWeight: typography.weights.semibold,                  
+      168 +  },                                                          
+      169 +  actionButton: {                                             
+      170 +    backgroundColor: colors.primary,                          
+      171 +    borderRadius: radii.md,                                   
+      172 +    paddingVertical: spacing.md,                              
+      173 +    alignItems: 'center',                                     
+      174 +    justifyContent: 'center',                                 
+      175 +  },                                                          
+      176 +  actionButtonDisabled: {                                     
+      177 +    backgroundColor: colors.disabled,                         
+      178 +  },                                                          
+      179 +  actionButtonText: {                                         
+      180 +    color: colors.white,                                      
+      181 +    fontSize: typography.md,                                  
+      182 +    fontWeight: typography.weights.semibold,                  
+      183 +    letterSpacing: 0.3,                                       
+      184 +  },                                                          
+      185 +  actionButtonTextDisabled: {                                 
+      186 +    color: colors.disabledText,                               
+      187 +  },                                                          
+      188 +});                                                           
+
+⏺ Now rewrite Summary.js — same logic, modern layout:
+
+⏺ Write(src/components/Summary.js)
+  ⎿  Added 92 lines, removed 38 lines
+      1  import React from 'react';
+      2  import { View, Text, StyleSheet, ScrollView } from 'react-native
+         ';
+      3 +import { colors, spacing, typography, radii } from '../theme';  
+      4  
+      5  /*this gets the questions and the answers the user inputs from t
+         he route.params*/
+      6  export default function Summary({ route }) {
+     ...
+      31  };
+      32  
+      33  return (
+      33 -<ScrollView style={{ padding: 20 }}>                           
+      34 -<Text style={styles.total} testID="total">                     
+      35 -Total Score: {calculateTheScore()} / {allData.length}          
+      36 -</Text>                                                        
+      37 -{allData.map((q, i) => {                                       
+      34 +    <ScrollView style={styles.scrollView} contentContainerStyle
+         +={styles.scrollContent}>                                       
+      35 +      <View style={styles.scoreCard}>                          
+      36 +        <Text style={styles.scoreLabel}>Total Score</Text>     
+      37 +        <Text style={styles.scoreNumber} testID="total">       
+      38 +          {calculateTheScore()} / {allData.length}             
+      39 +        </Text>                                                
+      40 +      </View>                                                  
+      41 +                                                               
+      42 +      <Text style={styles.sectionLabel}>Review</Text>          
+      43 +                                                               
+      44 +      {allData.map((q, i) => {                                 
+      45      const user = chosenAnswers[i] ?? [];
+      46      const correctAnswers = Array.isArray(q.correct) ? q.correct
+           : [q.correct];
+      47      const userSelection = Array.isArray(user) ? user : [user];
+      48  
+      49  return (
+      43 -    <View key={i} style={{ marginVertical: 15 }}>              
+      50 +    <View key={i} style={styles.questionCard}>                 
+      51      <Text style={styles.questionText}>{q.prompt}</Text>
+      52      {q.choices.map((choice, index) => {
+      53      let textStyle = styles.normal;
+     ...
+       72  }
+       73  
+       74  /*this makes the answer that the user selects incorrectly red 
+           strikethrough and makes the correct answers green*/
+       68 -    const styles = StyleSheet.create({                        
+       69 -correct: {                                                    
+       70 -fontWeight: 'bold',                                           
+       71 -fontSize: 18,                                                 
+       72 -marginVertical: 3,                                            
+       73 -color: 'green',                                               
+       74 -},                                                            
+       75 -                                                              
+       76 -incorrect: {                                                  
+       77 -textDecorationLine: 'line-through',                           
+       78 -color: 'red',                                                 
+       79 -fontSize: 18,                                                 
+       80 -marginVertical: 3,                                            
+       81 -},                                                            
+       82 -                                                              
+       83 -normal: {                                                     
+       84 -fontSize: 18,                                                 
+       85 -marginVertical: 3,                                            
+       86 -},                                                            
+       87 -                                                              
+       88 -total: {                                                      
+       89 -fontSize: 24,                                                 
+       90 -fontWeight: 'bold',                                           
+       91 -marginBottom: 25,                                             
+       92 -},                                                            
+       93 -                                                              
+       94 -questionText: {                                               
+       95 -fontSize: 20,                                                 
+       96 - marginBottom: 6,                                             
+       97 -},                                                            
+       98 -}                                                             
+       99 -);                                                            
+       75 +const styles = StyleSheet.create({                            
+       76 +  scrollView: {                                               
+       77 +    flex: 1,                                                  
+       78 +    backgroundColor: colors.background,                       
+       79 +  },                                                          
+       80 +  scrollContent: {                                            
+       81 +    padding: spacing.md,                                      
+       82 +    paddingBottom: spacing.xxl,                               
+       83 +  },                                                          
+       84 +  scoreCard: {                                                
+       85 +    backgroundColor: colors.primary,                          
+       86 +    borderRadius: radii.lg,                                   
+       87 +    padding: spacing.lg,                                      
+       88 +    alignItems: 'center',                                     
+       89 +    marginBottom: spacing.lg,                                 
+       90 +    shadowColor: colors.primary,                              
+       91 +    shadowOffset: { width: 0, height: 4 },                    
+       92 +    shadowOpacity: 0.3,                                       
+       93 +    shadowRadius: 8,                                          
+       94 +    elevation: 4,                                             
+       95 +  },                                                          
+       96 +  scoreLabel: {                                               
+       97 +    color: 'rgba(255,255,255,0.8)',                           
+       98 +    fontSize: typography.sm,                                  
+       99 +    fontWeight: typography.weights.medium,                    
+      100 +    textTransform: 'uppercase',                               
+      101 +    letterSpacing: 1,                                         
+      102 +    marginBottom: spacing.xs,                                 
+      103 +  },                                                          
+      104 +  scoreNumber: {                                              
+      105 +    color: colors.white,                                      
+      106 +    fontSize: typography.display,                             
+      107 +    fontWeight: typography.weights.bold,                      
+      108 +    lineHeight: 40,                                           
+      109 +  },                                                          
+      110 +  sectionLabel: {                                             
+      111 +    fontSize: typography.sm,                                  
+      112 +    color: colors.textSecondary,                              
+      113 +    fontWeight: typography.weights.semibold,                  
+      114 +    textTransform: 'uppercase',                               
+      115 +    letterSpacing: 0.8,                                       
+      116 +    marginBottom: spacing.sm,                                 
+      117 +  },                                                          
+      118 +  questionCard: {                                             
+      119 +    backgroundColor: colors.surface,                          
+      120 +    borderRadius: radii.md,                                   
+      121 +    padding: spacing.md,                                      
+      122 +    marginBottom: spacing.md,                                 
+      123 +    shadowColor: '#000',                                      
+      124 +    shadowOffset: { width: 0, height: 1 },                    
+      125 +    shadowOpacity: 0.06,                                      
+      126 +    shadowRadius: 4,                                          
+      127 +    elevation: 2,                                             
+      128 +  },                                                          
+      129 +  questionText: {                                             
+      130 +    fontSize: typography.md,                                  
+      131 +    color: colors.textPrimary,                                
+      132 +    fontWeight: typography.weights.semibold,                  
+      133 +    marginBottom: spacing.sm,                                 
+      134 +    lineHeight: 22,                                           
+      135 +  },                                                          
+      136 +  correct: {                                                  
+      137 +    fontWeight: typography.weights.semibold,                  
+      138 +    fontSize: typography.md,                                  
+      139 +    marginVertical: spacing.xs,                               
+      140 +    color: colors.correct,                                    
+      141 +  },                                                          
+      142 +  incorrect: {                                                
+      143 +    textDecorationLine: 'line-through',                       
+      144 +    color: colors.incorrect,                                  
+      145 +    fontSize: typography.md,                                  
+      146 +    marginVertical: spacing.xs,                               
+      147 +  },                                                          
+      148 +  normal: {                                                   
+      149 +    fontSize: typography.md,                                  
+      150 +    marginVertical: spacing.xs,                               
+      151 +    color: colors.textSecondary,                              
+      152 +  },                                                          
+      153 +});                                                           
+
+⏺ Let me verify the files look right and nothing was accidentally broken:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ All logic and testID values are intact. Here's a summary of every change made:
+
+  ---
+  What changed
+
+  src/theme.js (new file)
+
+  A single source of truth for the entire app's visual language:
+  - Colors — indigo primary (#4F46E5), slate background (#F8FAFC), white
+  surface, accessible green/red for feedback states
+  - Spacing scale — xs/sm/md/lg/xl/xxl (4–48px) replacing all magic numbers
+  - Typography scale — sm through display sizes + weight constants
+  - Border radii — sm/md/lg (8/12/16px)
+
+  App.js
+
+  - Navigation header now uses the indigo primary background with white title
+  and tint
+  - Added title: 'Quiz' and title: 'Results' to each screen so the header is no
+  longer blank
+
+  Question.js
+
+  ┌──────────────────────────┬──────────────────────────────────────────────┐
+  │          Before          │                    After                     │
+  ├──────────────────────────┼──────────────────────────────────────────────┤
+  │ Inline style={{ flex: 1, │ StyleSheet.create() with theme tokens        │
+  │  padding: 20 }}          │                                              │
+  ├──────────────────────────┼──────────────────────────────────────────────┤
+  │ Native <Button>          │ <TouchableOpacity> — indigo when active,     │
+  │ (unstyled, OS-default)   │ slate when disabled, rounded                 │
+  ├──────────────────────────┼──────────────────────────────────────────────┤
+  │ Back arrow color="black" │ color={colors.white} (visible on indigo      │
+  │                          │ header)                                      │
+  ├──────────────────────────┼──────────────────────────────────────────────┤
+  │ Plain question text      │ Wrapped in a white card with a "Question X   │
+  │                          │ of Y" counter above it                       │
+  ├──────────────────────────┼──────────────────────────────────────────────┤
+  │ Default ButtonGroup      │ Selected state: indigo fill + white text;    │
+  │ styling                  │ unselected: white + slate border             │
+  └──────────────────────────┴──────────────────────────────────────────────┘
+
+  Summary.js
+
+  ┌─────────────────────────────┬───────────────────────────────────────────┐
+  │           Before            │                   After                   │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │ Bold plain text score       │ Indigo hero card with "Total Score" label │
+  │                             │  + large display number                   │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │ Flat question list with     │ Each question in a white surface card     │
+  │ marginVertical spacing      │ with subtle shadow                        │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │ 'green'/'red' named colors  │ #16A34A / #DC2626 via theme constants     │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │ fontSize: 18/20/24 magic    │ typography.md/xl/display tokens           │
+  │ numbers                     │                                           │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │ padding: 20 on ScrollView   │ contentContainerStyle padding (correct RN │
+  │ style                       │  pattern)                                 │
+  └─────────────────────────────┴───────────────────────────────────────────┘
+
+✻ Cooked for 2m 50s
+
+❯ Refactor the UI structure of the quiz app using reusable components where     
+  appropriate.                                                                  
+  Introduce a consistent layout wrapper for all screens (quiz screen, results   
+  screen, start screen).                                                        
+  Ensure consistent padding, alignment, and max-width layout.                   
+  Do not modify quiz logic or state handling.                                   
+
+⏺ Let me read the current state of every relevant file before planning anything.
+
+  Read 4 files (ctrl+o to expand)
+
+⏺ I have the full picture. Here's the plan before writing any code:
+
+  New files:
+  - src/components/ui/ScreenWrapper.js — SafeAreaView + max-width constraint +
+  padding, with scroll prop variant for ScrollView screens
+  - src/components/ui/Card.js — white surface card (shadow, radius, padding)
+  - src/components/ui/PrimaryButton.js — the styled action button, extracted so
+  every screen uses the same one
+  - src/components/Start.js — welcome screen (routes to Question)
+
+  Updated files:
+  - Question.js — swap container → ScreenWrapper, questionCard → Card,
+  TouchableOpacity → PrimaryButton
+  - Summary.js — swap ScrollView+container → ScreenWrapper(scroll), questionCard
+   → Card
+  - App.js — add Start as initial screen; pass allData via its initialParams
+
+  No logic, no state, no testID values touched.
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Write(src/components/ui/ScreenWrapper.js)
+  ⎿  Wrote 58 lines to src/components/ui/ScreenWrapper.js
+       2 import { View, ScrollView, StyleSheet } from 'react-native';
+       3 import { SafeAreaView } from 'react-native-safe-area-context';
+       5 import { colors, spacing } from '../../theme';
+       6 // Consistent layout shell for every screen.
+       7 // scroll=false (default): flex column, good for screens with a 
+       8 // scroll=true: ScrollView with consistent padding and bottom cl
+         earance.
+         support.variants apply the same max-width constraint for tablet 
+      10 export default function ScreenWrapper({ children, scroll = false
+          }) {
+     … +53 lines (ctrl+o to expand)
+
+⏺ Write(src/components/ui/Card.js)
+  ⎿  Wrote 26 lines to src/components/ui/Card.js
+       2 import { View, StyleSheet } from 'react-native';
+       3 import { colors, spacing, radii } from '../../theme';
+       4 
+       5 // White surface card with consistent shadow and radius.
+       6 // Pass style to override or extend (e.g. marginBottom, custom p
+         adding).
+       7 export default function Card({ children, style }) {
+       8   return (
+       9     <View style={[styles.card, style]}>
+      10       {children}
+     … +17 lines (ctrl+o to expand)
+
+⏺ Write(src/components/ui/PrimaryButton.js)
+  ⎿  Wrote 42 lines to src/components/ui/PrimaryButton.js
+       2 import { TouchableOpacity, Text, StyleSheet } from 'react-native
+         ';
+         ;mport { colors, spacing, typography, radii } from '../../theme'
+       4 
+       5 // Full-width primary action button used on every screen.
+         ors.ccepts testID so callers can keep their existing test select
+       7 export default function PrimaryButton({ title, onPress, disabled
+       8   return (testID }) {
+       9     <TouchableOpacity
+      10       style={[styles.button, disabled && styles.buttonDisabled]}
+     … +34 lines (ctrl+o to expand)
+⏺ Write(src/components/Start.js)
+  ⎿  Wrote 59 lines to src/components/Start.js
+       1 import React from 'react';
+       2 import { View, Text, StyleSheet } from 'react-native';
+       3 import ScreenWrapper from './ui/ScreenWrapper';
+       4 import PrimaryButton from './ui/PrimaryButton';
+       5 import { colors, spacing, typography, radii } from '../theme';
+       6 
+       7 export default function Start({ navigation, route }) {
+       8   const { allData } = route.params;
+       9 
+      10   const handleStart = () => {
+     … +50 lines (ctrl+o to expand)
+
+⏺ Now rewrite Question.js — only the render block and styles change, all logic
+  is identical:
+
+⏺ Write(src/components/Question.js)
+  ⎿  Added 11 lines, removed 44 lines
+       1  import React, { useState, useEffect } from 'react';
+       2 -import { View, Text, TouchableOpacity, StyleSheet } from 'react
+         --native';                                                      
+       2 +import { Text, StyleSheet } from 'react-native';               
+       3  import { ButtonGroup } from 'react-native-elements';
+       4  import { useNavigation } from '@react-navigation/native';
+       5  import Icon from 'react-native-vector-icons/Ionicons';
+       6 +import ScreenWrapper from './ui/ScreenWrapper';                
+       7 +import Card from './ui/Card';                                  
+       8 +import PrimaryButton from './ui/PrimaryButton';                
+       9  import { colors, spacing, typography, radii } from '../theme';
+      10  
+      11  export default function Question({ navigation, route }) {
+     ...
+      78      (question.type === 'multiple-answer' && selectedIndex.lengt
+          h === 0);
+      79  
+      80    return (
+      78 -    <View style={styles.container}>                            
+      79 -      <View style={styles.questionCard}>                       
+      81 +    <ScreenWrapper>                                            
+      82 +      <Card style={styles.questionCard}>                       
+      83          <Text style={styles.questionCounter}>
+      84            Question {index + 1} of {allData.length}
+      85          </Text>
+      86          <Text style={styles.questionText}>{question.prompt}</Te
+          xt>
+      84 -      </View>                                                  
+      87 +      </Card>                                                  
+      88        <ButtonGroup
+      89          buttons={question.choices}
+      90          onPress={pressAnswer}
+     ...
+       99          selectedTextStyle={styles.buttonGroupSelectedText}
+      100          innerBorderStyle={{ color: colors.border }}
+      101        />
+       99 -      <TouchableOpacity                                       
+      100 -        style={[styles.actionButton, isDisabled && styles.acti
+          -onButtonDisabled]}                                            
+      102 +      <PrimaryButton                                          
+      103 +        title={index + 1 === allData.length ? 'Finish Quiz' : 
+          +'Next Question'}                                              
+      104          onPress={goToTheNextQuestion}
+      105          testID="next-question"
+      106          disabled={isDisabled}
+      104 -      >                                                       
+      105 -        <Text style={[styles.actionButtonText, isDisabled && s
+          -tyles.actionButtonTextDisabled]}>                             
+      106 -          {index + 1 === allData.length ? 'Finish Quiz' : 'Nex
+          -t Question'}                                                  
+      107 -        </Text>                                               
+      108 -      </TouchableOpacity>                                     
+      109 -    </View>                                                   
+      107 +      />                                                      
+      108 +    </ScreenWrapper>                                          
+      109    );
+      110  }
+      111  
+      112  const styles = StyleSheet.create({
+      114 -  container: {                                                
+      115 -    flex: 1,                                                  
+      116 -    backgroundColor: colors.background,                       
+      117 -    padding: spacing.md,                                      
+      118 -  },                                                          
+      113    questionCard: {
+      120 -    backgroundColor: colors.surface,                          
+      121 -    borderRadius: radii.md,                                   
+      122 -    padding: spacing.md,                                      
+      114      marginBottom: spacing.md,
+      124 -    shadowColor: '#000',                                      
+      125 -    shadowOffset: { width: 0, height: 1 },                    
+      126 -    shadowOpacity: 0.06,                                      
+      127 -    shadowRadius: 4,                                          
+      128 -    elevation: 2,                                             
+      115    },
+      116    questionCounter: {
+      117      fontSize: typography.sm,
+     ...
+      152      color: colors.white,
+      153      fontWeight: typography.weights.semibold,
+      154    },
+      169 -  actionButton: {                                             
+      170 -    backgroundColor: colors.primary,                          
+      171 -    borderRadius: radii.md,                                   
+      172 -    paddingVertical: spacing.md,                              
+      173 -    alignItems: 'center',                                     
+      174 -    justifyContent: 'center',                                 
+      175 -  },                                                          
+      176 -  actionButtonDisabled: {                                     
+      177 -    backgroundColor: colors.disabled,                         
+      178 -  },                                                          
+      179 -  actionButtonText: {                                         
+      180 -    color: colors.white,                                      
+      181 -    fontSize: typography.md,                                  
+      182 -    fontWeight: typography.weights.semibold,                  
+      183 -    letterSpacing: 0.3,                                       
+      184 -  },                                                          
+      185 -  actionButtonTextDisabled: {                                 
+      186 -    color: colors.disabledText,                               
+      187 -  },                                                          
+      155  });
+
+⏺ Now rewrite Summary.js:
+
+⏺ Write(src/components/Summary.js)
+  ⎿  Added 7 lines, removed 21 lines
+      1  import React from 'react';
+      2 -import { View, Text, StyleSheet, ScrollView } from 'react-native
+        -';                                                              
+      2 +import { View, Text, StyleSheet } from 'react-native';          
+      3 +import ScreenWrapper from './ui/ScreenWrapper';                 
+      4 +import Card from './ui/Card';                                   
+      5  import { colors, spacing, typography, radii } from '../theme';
+      6  
+      7  /*this gets the questions and the answers the user inputs from t
+         he route.params*/
+     ...
+      33  };
+      34  
+      35  return (
+      34 -    <ScrollView style={styles.scrollView} contentContainerStyle
+         -={styles.scrollContent}>                                       
+      36 +    <ScreenWrapper scroll>                                     
+      37        <View style={styles.scoreCard}>
+      38          <Text style={styles.scoreLabel}>Total Score</Text>
+      39          <Text style={styles.scoreNumber} testID="total">
+     ...
+      49      const userSelection = Array.isArray(user) ? user : [user];
+      50  
+      51  return (
+      50 -    <View key={i} style={styles.questionCard}>                 
+      52 +    <Card key={i} style={styles.questionCard}>                 
+      53      <Text style={styles.questionText}>{q.prompt}</Text>
+      54      {q.choices.map((choice, index) => {
+      55      let textStyle = styles.normal;
+     ...
+      66  
+      67      return <Text key={index} style={textStyle}>{choice}</Text>;
+      68  })}
+      67 -</View>                                                        
+      69 +</Card>                                                        
+      70  );
+      71  })}
+      70 -</ScrollView>                                                  
+      72 +</ScreenWrapper>                                               
+      73  );
+      74  }
+      75  
+      76  /*this makes the answer that the user selects incorrectly red s
+          trikethrough and makes the correct answers green*/
+      77  const styles = StyleSheet.create({
+      76 -  scrollView: {                                                
+      77 -    flex: 1,                                                   
+      78 -    backgroundColor: colors.background,                        
+      79 -  },                                                           
+      80 -  scrollContent: {                                             
+      81 -    padding: spacing.md,                                       
+      82 -    paddingBottom: spacing.xxl,                                
+      83 -  },                                                           
+      78    scoreCard: {
+      79      backgroundColor: colors.primary,
+      80      borderRadius: radii.lg,
+     ...
+      110      marginBottom: spacing.sm,
+      111    },
+      112    questionCard: {
+      119 -    backgroundColor: colors.surface,                          
+      120 -    borderRadius: radii.md,                                   
+      121 -    padding: spacing.md,                                      
+      113      marginBottom: spacing.md,
+      123 -    shadowColor: '#000',                                      
+      124 -    shadowOffset: { width: 0, height: 1 },                    
+      125 -    shadowOpacity: 0.06,                                      
+      126 -    shadowRadius: 4,                                          
+      127 -    elevation: 2,                                             
+      114    },
+      115    questionText: {
+      116      fontSize: typography.md,
+
+⏺ Now wire Start into the navigator and make it the initial screen:
+
+⏺ Update(App.js)
+  ⎿  Added 1 line
+      1  import React from 'react';
+      2  import { NavigationContainer } from '@react-navigation/native';
+      3  import { createStackNavigator } from '@react-navigation/stack';
+      4 +import Start from './src/components/Start';                     
+      5  import Question from './src/components/Question';
+      6  import Summary from './src/components/Summary';
+      7  import { colors, typography } from './src/theme';
+
+⏺ Update(App.js)
+  ⎿  Added 9 lines, removed 4 lines
+      26  
+      27  {/*this navigates the stacks so it can change between the diffe
+          rent screens*/}
+      28  <Stack.Screen
+      29 -name="Question"                                                
+      30 -component={Question}                                           
+      31 -initialParams={{ allData: questions, index: 0, chosenAnswers: [
+         -] }}                                                           
+      32 -options={{ title: 'Quiz' }}                                    
+      29 +  name="Start"                                                 
+      30 +  component={Start}                                            
+      31 +  initialParams={{ allData: questions }}                       
+      32 +  options={{ title: 'Quiz App' }}                              
+      33  />
+      34  <Stack.Screen
+      35 +  name="Question"                                              
+      36 +  component={Question}                                         
+      37 +  options={{ title: 'Quiz' }}                                  
+      38 +/>                                                             
+      39 +<Stack.Screen                                                  
+      40    name="Summary"
+      41    component={Summary}
+      42    options={{ title: 'Results' }}
+
+⏺ Now verify the final state of everything:
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+⏺ All logic and testID values are intact. Here's what was done:
+
+  ---
+  What changed
+
+  New: src/components/ui/ — three reusable primitives
+
+  ┌───────────────┬──────────────────────────────────────────────────────────┐
+  │   Component   │                      Responsibility                      │
+  ├───────────────┼──────────────────────────────────────────────────────────┤
+  │               │ Root shell for every screen: SafeAreaView (bottom edge   │
+  │ ScreenWrapper │ only — header handles top), consistent padding:          │
+  │               │ spacing.md, maxWidth: 600 + alignSelf: center for        │
+  │               │ tablet. scroll prop switches to a ScrollView variant     │
+  ├───────────────┼──────────────────────────────────────────────────────────┤
+  │ Card          │ White surface with shadow and borderRadius: radii.md.    │
+  │               │ Accepts a style override for spacing (e.g. marginBottom) │
+  ├───────────────┼──────────────────────────────────────────────────────────┤
+  │ PrimaryButton │ The action button with active/disabled states and testID │
+  │               │  pass-through                                            │
+  └───────────────┴──────────────────────────────────────────────────────────┘
+
+  New: src/components/Start.js
+
+  Welcome screen. Receives allData from navigation params, shows the question
+  count, and calls navigation.navigate('Question', { allData, index: 0, 
+  chosenAnswers: [] }) on press. Uses ScreenWrapper, PrimaryButton.
+
+  Updated: Question.js
+
+  - Container View → ScreenWrapper (no scroll prop — needs flex: 1 for the
+  ButtonGroup to expand)
+  - Question card View → Card with style={{ marginBottom: spacing.md }}
+  - TouchableOpacity button → PrimaryButton (preserves testID="next-question")
+  - Local StyleSheet reduced to just the ButtonGroup overrides + question text
+  styles
+
+  Updated: Summary.js
+
+  - ScrollView + wrapping View → ScreenWrapper scroll
+  - Each question View → Card with style={{ marginBottom: spacing.md }}
+  - Removed scrollView and scrollContent styles (absorbed by ScreenWrapper)
+
+  Updated: App.js
+
+  - Start added as the first (initial) screen with initialParams={{ allData: 
+  questions }}
+  - Question no longer holds initialParams — Start passes the params when
+  navigating
+
+✻ Cogitated for 3m 50s
+
+❯ Add final UI polish to the quiz app.                                          
+  Include:                                                                      
+                                                                                
+  smooth transitions between questions                                          
+  subtle animations for selecting answers                                       
+  improved result screen design (score display, summary styling)                
+  mobile responsiveness improvements                                            
+  Ensure everything remains functional and stable with no logic changes.        
+
+⏺ Let me read every file in its current state before touching anything.
+
+  Read 9 files (ctrl+o to expand)
+
+⏺ Good. Full picture acquired. Here's the exact plan before any code is written:
+
+  What each animation does and where it lives:
+  - ChoiceButton — Reanimated interpolateColor for bg/text on select, withSpring
+   scale on press
+  - ProgressBar — RN Animated API (layout animations can't use native driver;
+  keep it simple)
+  - FadeInView — Reanimated withDelay + withSpring entrance wrapper; used for
+  staggered Summary cards
+  - PrimaryButton — withSpring scale on press/release via Reanimated
+  - Question.js — fade + slide-up entrance on mount; ProgressBar + ChoiceButton
+  replacing ButtonGroup
+  - Summary.js — scale-pop entrance for score card; staggered FadeInView for
+  review cards; icon indicators for correct/wrong choices
+  - Start.js — hero card slide-up, button fade-in with delay
+  - App.js — spring-based transitionSpec for horizontal screen slides
+
+  No testID values change. No logic changes. calculateTheScore, pressAnswer, 
+  goToTheNextQuestion, all state — untouched.
+
+⏺ Write(src/components/ui/ChoiceButton.js)
+  ⎿  Wrote 89 lines to src/components/ui/ChoiceButton.js
+       2 import { Pressable, StyleSheet } from 'react-native';
+       3 import Animated, {
+       4   useSharedValue,
+       5   useAnimatedStyle,
+       6   withSpring,
+       7   withTiming,
+       8   interpolateColor,
+       9 } from 'react-native-reanimated';
+      10 import { colors, spacing, typography, radii } from '../../theme'
+         ;
+     … +81 lines (ctrl+o to expand)
+
+⏺ Write(src/components/ui/ProgressBar.js)
+  ⎿  Wrote 49 lines to src/components/ui/ProgressBar.js
+      2 import { View, Animated, StyleSheet } from 'react-native';
+      3 import { colors, spacing, radii } from '../../theme';
+      4 
+      5 // Animated progress bar. progress is 0–1.
+      6 // Uses RN's built-in Animated (not Reanimated) because width tra
+        nsitions
+      7 // cannot use the native driver and don't need Reanimated's extra
+         power.
+      8 export default function ProgressBar({ progress }) {
+      9   const widthAnim = useRef(new Animated.Value(0)).current;
+     … +41 lines (ctrl+o to expand)
+
+⏺ Write(src/components/ui/FadeInView.js)
+  ⎿  Wrote 31 lines to src/components/ui/FadeInView.js
+       1 import React, { useEffect } from 'react';
+       2 import Animated, {
+       3   useSharedValue,
+       4   useAnimatedStyle,
+       5   withTiming,
+       6   withSpring,
+       7   withDelay,
+       8 } from 'react-native-reanimated';
+       9 
+      10 // Wraps any content in a fade + slide-up entrance animation.
+     … +23 lines (ctrl+o to expand)
+
+⏺ Now update PrimaryButton — swap TouchableOpacity for Pressable + Reanimated
+  scale:
+
+⏺ Write(src/components/ui/PrimaryButton.js)
+  ⎿  Added 35 lines, removed 12 lines
+       1  import React from 'react';
+       2 -import { TouchableOpacity, Text, StyleSheet } from 'react-nativ
+         -e';                                                            
+       2 +import { Pressable, Text, StyleSheet } from 'react-native';    
+       3 +import Animated, {                                             
+       4 +  useSharedValue,                                              
+       5 +  useAnimatedStyle,                                            
+       6 +  withSpring,                                                  
+       7 +} from 'react-native-reanimated';                              
+       8  import { colors, spacing, typography, radii } from '../../theme
+          ';
+       9  
+      10  // Full-width primary action button used on every screen.
+       6 -// Accepts testID so callers can keep their existing test selec
+         -tors.                                                          
+      11 +// Spring scale on press/release. testID passed to the inner Pr
+         +essable.                                                       
+      12  export default function PrimaryButton({ title, onPress, disable
+          d = false, testID }) {
+      13 +  const scale = useSharedValue(1);                             
+      14 +                                                               
+      15 +  const handlePressIn = () => {                                
+      16 +    if (!disabled) scale.value = withSpring(0.96, { damping: 15
+         +, stiffness: 400 });                                           
+      17 +  };                                                           
+      18 +                                                               
+      19 +  const handlePressOut = () => {                               
+      20 +    scale.value = withSpring(1, { damping: 15, stiffness: 400 }
+         +);                                                             
+      21 +  };                                                           
+      22 +                                                               
+      23 +  const animatedStyle = useAnimatedStyle(() => ({              
+      24 +    transform: [{ scale: scale.value }],                       
+      25 +  }));                                                         
+      26 +                                                               
+      27    return (
+       9 -    <TouchableOpacity                                          
+      10 -      style={[styles.button, disabled && styles.buttonDisabled]
+         -}                                                              
+      11 -      onPress={onPress}                                        
+      12 -      disabled={disabled}                                      
+      13 -      testID={testID}                                          
+      14 -    >                                                          
+      15 -      <Text style={[styles.label, disabled && styles.labelDisab
+         -led]}>                                                         
+      16 -        {title}                                                
+      17 -      </Text>                                                  
+      18 -    </TouchableOpacity>                                        
+      28 +    <Animated.View style={animatedStyle}>                      
+      29 +      <Pressable                                               
+      30 +        style={[styles.button, disabled && styles.buttonDisable
+         +d]}                                                            
+      31 +        onPress={onPress}                                      
+      32 +        onPressIn={handlePressIn}                              
+      33 +        onPressOut={handlePressOut}                            
+      34 +        disabled={disabled}                                    
+      35 +        testID={testID}                                        
+      36 +      >                                                        
+      37 +        <Text style={[styles.label, disabled && styles.labelDis
+         +abled]}>                                                       
+      38 +          {title}                                              
+      39 +        </Text>                                                
+      40 +      </Pressable>                                             
+      41 +    </Animated.View>                                           
+      42    );
+      43  }
+      44  
+
+⏺ Now rewrite Question.js — all logic identical, only imports and render block
+  change:
+
+⏺ Write(src/components/Question.js)
+  ⎿  Added 59 lines, removed 50 lines
+       1  import React, { useState, useEffect } from 'react';
+       2 -import { Text, StyleSheet } from 'react-native';               
+       3 -import { ButtonGroup } from 'react-native-elements';           
+       2 +import { View, Text, StyleSheet } from 'react-native';         
+       3 +import Animated, {                                             
+       4 +  useSharedValue,                                              
+       5 +  useAnimatedStyle,                                            
+       6 +  withTiming,                                                  
+       7 +  withSpring,                                                  
+       8 +  Easing,                                                      
+       9 +} from 'react-native-reanimated';                              
+      10  import { useNavigation } from '@react-navigation/native';
+      11  import Icon from 'react-native-vector-icons/Ionicons';
+      12  import ScreenWrapper from './ui/ScreenWrapper';
+      13  import Card from './ui/Card';
+      14  import PrimaryButton from './ui/PrimaryButton';
+      15 +import ChoiceButton from './ui/ChoiceButton';                  
+      16 +import ProgressBar from './ui/ProgressBar';                    
+      17  import { colors, spacing, typography, radii } from '../theme';
+      18  
+      19  export default function Question({ navigation, route }) {
+     ...
+       85      selectedIndex === null ||
+       86      (question.type === 'multiple-answer' && selectedIndex.leng
+           th === 0);
+       87  
+       88 +  // Entrance animation: each new question screen fades + slid
+          +es up on mount.                                               
+       89 +  const contentOpacity = useSharedValue(0);                   
+       90 +  const contentTranslateY = useSharedValue(18);               
+       91 +                                                              
+       92 +  useEffect(() => {                                           
+       93 +    contentOpacity.value = withTiming(1, {                    
+       94 +      duration: 350,                                          
+       95 +      easing: Easing.out(Easing.quad),                        
+       96 +    });                                                       
+       97 +    contentTranslateY.value = withSpring(0, { damping: 20, sti
+          +ffness: 280 });                                               
+       98 +  }, []);                                                     
+       99 +                                                              
+      100 +  const contentStyle = useAnimatedStyle(() => ({              
+      101 +    opacity: contentOpacity.value,                            
+      102 +    transform: [{ translateY: contentTranslateY.value }],     
+      103 +    flex: 1,                                                  
+      104 +  }));                                                        
+      105 +                                                              
+      106    return (
+      107      <ScreenWrapper>
+       82 -      <Card style={styles.questionCard}>                      
+       83 -        <Text style={styles.questionCounter}>                 
+       84 -          Question {index + 1} of {allData.length}            
+       85 -        </Text>                                               
+       86 -        <Text style={styles.questionText}>{question.prompt}</T
+          -ext>                                                          
+       87 -      </Card>                                                 
+       88 -      <ButtonGroup                                            
+       89 -        buttons={question.choices}                            
+       90 -        onPress={pressAnswer}                                 
+       91 -        selectedIndexes={question.type === 'multiple-answer' ?
+          - selectedIndex : undefined}                                   
+       92 -        selectedIndex={question.type !== 'multiple-answer' ? s
+          -electedIndex : undefined}                                     
+       93 -        vertical                                              
+       94 -        testID="choices"                                      
+       95 -        containerStyle={styles.buttonGroupContainer}          
+       96 -        buttonStyle={styles.buttonGroupButton}                
+       97 -        textStyle={styles.buttonGroupText}                    
+       98 -        selectedButtonStyle={styles.buttonGroupSelected}      
+       99 -        selectedTextStyle={styles.buttonGroupSelectedText}    
+      100 -        innerBorderStyle={{ color: colors.border }}           
+      101 -      />                                                      
+      102 -      <PrimaryButton                                          
+      103 -        title={index + 1 === allData.length ? 'Finish Quiz' : 
+          -'Next Question'}                                              
+      104 -        onPress={goToTheNextQuestion}                         
+      105 -        testID="next-question"                                
+      106 -        disabled={isDisabled}                                 
+      107 -      />                                                      
+      108 +      <ProgressBar progress={(index + 1) / allData.length} /> 
+      109 +      <Animated.View style={contentStyle}>                    
+      110 +        <Card style={styles.questionCard}>                    
+      111 +          <Text style={styles.questionCounter}>               
+      112 +            Question {index + 1} of {allData.length}          
+      113 +          </Text>                                             
+      114 +          <Text style={styles.questionText}>{question.prompt}<
+          +/Text>                                                        
+      115 +        </Card>                                               
+      116 +        <View testID="choices" style={styles.choicesContainer}
+          +>                                                             
+      117 +          {question.choices.map((choice, i) => (              
+      118 +            <ChoiceButton                                     
+      119 +              key={i}                                         
+      120 +              label={choice}                                  
+      121 +              index={i}                                       
+      122 +              isSelected={                                    
+      123 +                question.type === 'multiple-answer'           
+      124 +                  ? selectedIndex.includes(i)                 
+      125 +                  : selectedIndex === i                       
+      126 +              }                                               
+      127 +              onPress={pressAnswer}                           
+      128 +            />                                                
+      129 +          ))}                                                 
+      130 +        </View>                                               
+      131 +        <PrimaryButton                                        
+      132 +          title={index + 1 === allData.length ? 'Finish Quiz' 
+          +: 'Next Question'}                                            
+      133 +          onPress={goToTheNextQuestion}                       
+      134 +          testID="next-question"                              
+      135 +          disabled={isDisabled}                               
+      136 +        />                                                    
+      137 +      </Animated.View>                                        
+      138      </ScreenWrapper>
+      139    );
+      140  }
+     ...
+      157      fontWeight: typography.weights.semibold,
+      158      lineHeight: 26,
+      159    },
+      130 -  buttonGroupContainer: {                                     
+      160 +  choicesContainer: {                                         
+      161      flex: 1,
+      132 -    borderRadius: radii.md,                                   
+      133 -    borderColor: colors.border,                               
+      162      marginBottom: spacing.md,
+      135 -    marginLeft: 0,                                            
+      136 -    marginRight: 0,                                           
+      137 -    overflow: 'hidden',                                       
+      163    },
+      139 -  buttonGroupButton: {                                        
+      140 -    backgroundColor: colors.surface,                          
+      141 -    paddingVertical: spacing.sm,                              
+      142 -  },                                                          
+      143 -  buttonGroupText: {                                          
+      144 -    fontSize: typography.md,                                  
+      145 -    color: colors.textPrimary,                                
+      146 -    fontWeight: typography.weights.regular,                   
+      147 -  },                                                          
+      148 -  buttonGroupSelected: {                                      
+      149 -    backgroundColor: colors.primary,                          
+      150 -  },                                                          
+      151 -  buttonGroupSelectedText: {                                  
+      152 -    color: colors.white,                                      
+      153 -    fontWeight: typography.weights.semibold,                  
+      154 -  },                                                          
+      164  });
+
+⏺ Now rewrite Summary.js — all scoring logic untouched:
+
+⏺ Write(src/components/Summary.js)
+  ⎿  Added 99 lines, removed 24 lines
+       1 -import React from 'react';                                     
+       1 +import React, { useEffect } from 'react';                      
+       2  import { View, Text, StyleSheet } from 'react-native';
+       3 +import Animated, {                                             
+       4 +  useSharedValue,                                              
+       5 +  useAnimatedStyle,                                            
+       6 +  withSpring,                                                  
+       7 +  withTiming,                                                  
+       8 +} from 'react-native-reanimated';                              
+       9 +import Icon from 'react-native-vector-icons/Ionicons';         
+      10  import ScreenWrapper from './ui/ScreenWrapper';
+      11  import Card from './ui/Card';
+      12 +import FadeInView from './ui/FadeInView';                      
+      13  import { colors, spacing, typography, radii } from '../theme';
+      14  
+      15  /*this gets the questions and the answers the user inputs from 
+          the route.params*/
+     ...
+      40  }, 0);
+      41  };
+      42  
+      43 +  const score = calculateTheScore();                           
+      44 +  const percentage = Math.round((score / allData.length) * 100)
+         +;                                                              
+      45 +  const message =                                              
+      46 +    score === allData.length                                   
+      47 +      ? 'Perfect score!'                                       
+      48 +      : score === 0                                            
+      49 +      ? 'Keep practicing!'                                     
+      50 +      : percentage >= 70                                       
+      51 +      ? 'Great job!'                                           
+      52 +      : 'Good effort!';                                        
+      53 +                                                               
+      54 +  // Score card springs in from a slightly smaller scale on mou
+         +nt.                                                            
+      55 +  const scoreScale = useSharedValue(0.85);                     
+      56 +  const scoreOpacity = useSharedValue(0);                      
+      57 +                                                               
+      58 +  useEffect(() => {                                            
+      59 +    scoreOpacity.value = withTiming(1, { duration: 500 });     
+      60 +    scoreScale.value = withSpring(1, { damping: 12, stiffness: 
+         +180 });                                                        
+      61 +  }, []);                                                      
+      62 +                                                               
+      63 +  const scoreCardStyle = useAnimatedStyle(() => ({             
+      64 +    opacity: scoreOpacity.value,                               
+      65 +    transform: [{ scale: scoreScale.value }],                  
+      66 +  }));                                                         
+      67 +                                                               
+      68  return (
+      69      <ScreenWrapper scroll>
+      37 -      <View style={styles.scoreCard}>                          
+      70 +      <Animated.View style={[styles.scoreCard, scoreCardStyle]}
+         +>                                                              
+      71          <Text style={styles.scoreLabel}>Total Score</Text>
+      72          <Text style={styles.scoreNumber} testID="total">
+      40 -          {calculateTheScore()} / {allData.length}             
+      73 +          {score} / {allData.length}                           
+      74          </Text>
+      42 -      </View>                                                  
+      75 +        <Text style={styles.scorePct}>{percentage}%</Text>     
+      76 +        <Text style={styles.scoreMessage}>{message}</Text>     
+      77 +      </Animated.View>                                         
+      78  
+      79        <Text style={styles.sectionLabel}>Review</Text>
+      80  
+     ...
+       84      const userSelection = Array.isArray(user) ? user : [user];
+       85  
+       86  return (
+       52 -    <Card key={i} style={styles.questionCard}>                
+       53 -    <Text style={styles.questionText}>{q.prompt}</Text>       
+       54 -    {q.choices.map((choice, index) => {                       
+       55 -    let textStyle = styles.normal;                            
+       87 +    <FadeInView key={i} delay={i * 80}>                       
+       88 +      <Card style={styles.questionCard}>                      
+       89 +        <Text style={styles.questionText}>{q.prompt}</Text>   
+       90 +        {q.choices.map((choice, idx) => {                     
+       91 +          const isCorrect = correctAnswers.includes(idx);     
+       92 +          const isWrongPick =                                 
+       93 +            userSelection.includes(idx) && !correctAnswers.inc
+          +ludes(idx);                                                   
+       94  
+       57 -/*this makes the correct answers bold*/                       
+       58 -    if (correctAnswers.includes(index)) {                     
+       59 -    textStyle = styles.correct;                               
+       60 -}                                                             
+       61 -                                                              
+       62 -/*this strikes through the answers the user incorrectly select
+          -s*/                                                           
+       63 -    if (userSelection.includes(index) && !correctAnswers.inclu
+          -des(index)) {                                                 
+       64 -    textStyle = styles.incorrect;                             
+       65 -}                                                             
+       66 -                                                              
+       67 -    return <Text key={index} style={textStyle}>{choice}</Text>
+          -;                                                             
+       68 -})}                                                           
+       69 -</Card>                                                       
+       95 +          return (                                            
+       96 +            <View key={idx} style={styles.choiceRow}>         
+       97 +              <View style={styles.choiceIcon}>                
+       98 +                {/*this makes the correct answers green with a
+          + checkmark*/}                                                 
+       99 +                {isCorrect && (                               
+      100 +                  <Icon name="checkmark-circle" size={16} colo
+          +r={colors.correct} />                                         
+      101 +                )}                                            
+      102 +                {/*this marks the wrong selections with a red 
+          +X*/}                                                          
+      103 +                {isWrongPick && (                             
+      104 +                  <Icon name="close-circle" size={16} color={c
+          +olors.incorrect} />                                           
+      105 +                )}                                            
+      106 +              </View>                                         
+      107 +              <Text                                           
+      108 +                style={                                       
+      109 +                  isCorrect                                   
+      110 +                    ? styles.correct                          
+      111 +                    : isWrongPick                             
+      112 +                    ? styles.incorrect                        
+      113 +                    : styles.normal                           
+      114 +                }                                             
+      115 +              >                                               
+      116 +                {choice}                                      
+      117 +              </Text>                                         
+      118 +            </View>                                           
+      119 +          );                                                  
+      120 +        })}                                                   
+      121 +      </Card>                                                 
+      122 +    </FadeInView>                                             
+      123  );
+      124  })}
+      125  </ScreenWrapper>
+     ...
+      154      fontWeight: typography.weights.bold,
+      155      lineHeight: 40,
+      156    },
+      157 +  scorePct: {                                                 
+      158 +    color: 'rgba(255,255,255,0.7)',                           
+      159 +    fontSize: typography.xxl,                                 
+      160 +    fontWeight: typography.weights.medium,                    
+      161 +    marginTop: spacing.xs,                                    
+      162 +  },                                                          
+      163 +  scoreMessage: {                                             
+      164 +    color: 'rgba(255,255,255,0.85)',                          
+      165 +    fontSize: typography.md,                                  
+      166 +    fontWeight: typography.weights.medium,                    
+      167 +    marginTop: spacing.sm,                                    
+      168 +  },                                                          
+      169    sectionLabel: {
+      170      fontSize: typography.sm,
+      171      color: colors.textSecondary,
+     ...
+      184      marginBottom: spacing.sm,
+      185      lineHeight: 22,
+      186    },
+      187 +  choiceRow: {                                                
+      188 +    flexDirection: 'row',                                     
+      189 +    alignItems: 'center',                                     
+      190 +    marginVertical: spacing.xs,                               
+      191 +  },                                                          
+      192 +  choiceIcon: {                                               
+      193 +    width: 22,                                                
+      194 +    marginRight: spacing.xs,                                  
+      195 +    alignItems: 'center',                                     
+      196 +  },                                                          
+      197    correct: {
+      198      fontWeight: typography.weights.semibold,
+      199      fontSize: typography.md,
+      125 -    marginVertical: spacing.xs,                               
+      200      color: colors.correct,
+      201 +    flex: 1,                                                  
+      202    },
+      203    incorrect: {
+      204      textDecorationLine: 'line-through',
+      205      color: colors.incorrect,
+      206      fontSize: typography.md,
+      132 -    marginVertical: spacing.xs,                               
+      207 +    flex: 1,                                                  
+      208    },
+      209    normal: {
+      210      fontSize: typography.md,
+      136 -    marginVertical: spacing.xs,                               
+      211      color: colors.textSecondary,
+      212 +    flex: 1,                                                  
+      213    },
+      214  });
+
+⏺ Now add the entrance animation to Start.js:
+
+⏺ Write(src/components/Start.js)  ⎿  Added 33 lines, removed 4 lines
+       1 -import React from 'react';                                     
+       1 +import React, { useEffect } from 'react';                      
+       2  import { View, Text, StyleSheet } from 'react-native';
+       3 +import Animated, {                                             
+       4 +  useSharedValue,                                              
+       5 +  useAnimatedStyle,                                            
+       6 +  withTiming,                                                  
+       7 +  withSpring,                                                  
+       8 +  withDelay,                                                   
+       9 +} from 'react-native-reanimated';                              
+      10  import ScreenWrapper from './ui/ScreenWrapper';
+      11  import PrimaryButton from './ui/PrimaryButton';
+      12  import { colors, spacing, typography, radii } from '../theme';
+     ...
+      22      });
+      23    };
+      24  
+      25 +  // Hero card slides up; button fades in slightly after.      
+      26 +  const heroOpacity = useSharedValue(0);                       
+      27 +  const heroTranslateY = useSharedValue(24);                   
+      28 +  const btnOpacity = useSharedValue(0);                        
+      29 +                                                               
+      30 +  useEffect(() => {                                            
+      31 +    heroOpacity.value = withTiming(1, { duration: 500 });      
+      32 +    heroTranslateY.value = withSpring(0, { damping: 16, stiffne
+         +ss: 200 });                                                    
+      33 +    btnOpacity.value = withDelay(250, withTiming(1, { duration:
+         + 400 }));                                                      
+      34 +  }, []);                                                      
+      35 +                                                               
+      36 +  const heroStyle = useAnimatedStyle(() => ({                  
+      37 +    opacity: heroOpacity.value,                                
+      38 +    transform: [{ translateY: heroTranslateY.value }],         
+      39 +  }));                                                         
+      40 +                                                               
+      41 +  const btnStyle = useAnimatedStyle(() => ({                   
+      42 +    opacity: btnOpacity.value,                                 
+      43 +  }));                                                         
+      44 +                                                               
+      45    return (
+      46      <ScreenWrapper>
+      47        <View style={styles.content}>
+      21 -        <View style={styles.hero}>                             
+      48 +        <Animated.View style={[styles.hero, heroStyle]}>       
+      49            <Text style={styles.appTitle}>Quiz App</Text>
+      50            <Text style={styles.subtitle}>{allData.length} questi
+          ons</Text>
+      24 -        </View>                                                
+      25 -        <PrimaryButton title="Start Quiz" onPress={handleStart}
+         - />                                                            
+      51 +        </Animated.View>                                       
+      52 +        <Animated.View style={btnStyle}>                       
+      53 +          <PrimaryButton title="Start Quiz" onPress={handleStar
+         +t} />                                                          
+      54 +        </Animated.View>                                       
+      55        </View>
+      56      </ScreenWrapper>
+      57    );
+
+⏺ Now add spring screen transitions to App.js:
+
+⏺ Update(App.js)
+  ⎿  Added 1 line, removed 1 line
+      1  import React from 'react';
+      2  import { NavigationContainer } from '@react-navigation/native';
+      3 -import { createStackNavigator } from '@react-navigation/stack'; 
+      3 +import { createStackNavigator, CardStyleInterpolators } from '@r
+        +eact-navigation/stack';                                         
+      4  import Start from './src/components/Start';
+      5  import Question from './src/components/Question';
+      6  import Summary from './src/components/Summary';
+
+⏺ Update(App.js)
+  ⎿  Added 11 lines
+      21        fontSize: typography.lg,
+      22        fontWeight: typography.weights.semibold,
+      23      },
+      24 +    cardStyleInterpolator: CardStyleInterpolators.forHorizontal
+         +IOS,                                                           
+      25 +    transitionSpec: {                                          
+      26 +      open: {                                                  
+      27 +        animation: 'spring',                                   
+      28 +        config: { stiffness: 300, damping: 35, mass: 1, oversho
+         +otClamping: false },                                           
+      29 +      },                                                       
+      30 +      close: {                                                 
+      31 +        animation: 'spring',                                   
+      32 +        config: { stiffness: 300, damping: 35, mass: 1, oversho
+         +otClamping: false },                                           
+      33 +      },                                                       
+      34 +    },                                                         
+      35    }}
+      36  >
+      37  
+
+⏺ Now verify the complete final state:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ All logic intact, all testID values preserved. Here's the complete breakdown
+  of every change:
+
+  ---
+  What was added and why
+
+  3 new ui/ primitives
+
+  ChoiceButton.js — Replaces the react-native-elements ButtonGroup. Uses
+  Reanimated's interpolateColor to smoothly transition background and text color
+   on selection (200ms), and withSpring scale on press/release. The
+  testID="choices" is now on the container View in Question.js — same
+  testability, full animation control.
+
+  ProgressBar.js — 4px track at the top of each question screen. Uses RN's
+  built-in Animated (not Reanimated) because width transitions require
+  useNativeDriver: false and don't benefit from Reanimated's extra features.
+  Animates from 0% to (index+1)/total over 500ms with an ease-out curve.
+
+  FadeInView.js — Generic Reanimated wrapper: fade in + 16px slide-up on mount.
+  Accepts a delay prop so Summary cards stagger at 80ms intervals.
+
+  ---
+  Modified files
+
+  PrimaryButton.js — Switched from TouchableOpacity to Pressable +
+  Animated.View. withSpring(0.96) on press-in, withSpring(1) on press-out.
+  Disabled state correctly skips the scale animation.
+
+  Question.js — Removed ButtonGroup entirely. Added mount animation (withTiming
+  opacity + withSpring translateY from 18px, fires once on screen mount so every
+   new question slides in). ProgressBar sits above the animated content block.
+
+  Summary.js — Score card pops in with withSpring scale from 0.85 + withTiming
+  fade. Question review cards stagger in via FadeInView with 80ms per-card
+  delay. Answer rows now have icon indicators (checkmark-circle / close-circle)
+  from Ionicons alongside the existing color coding. Score card gained a
+  percentage line and a contextual message (calculateTheScore is unchanged —
+  called once and stored in score).
+
+  Start.js — Hero card slides up from 24px via withSpring; button fades in 250ms
+   later via withDelay + withTiming.
+
+  App.js — CardStyleInterpolators.forHorizontalIOS standardizes the slide
+  direction on both platforms. transitionSpec overrides both open/close with a
+  spring config (stiffness: 300, damping: 35) — noticeably smoother than the
+  default overly-stiff iOS spec.
+
+✻ Sautéed for 6m 21s
